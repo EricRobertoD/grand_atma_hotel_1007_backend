@@ -31,6 +31,7 @@ class KamarController extends Controller
         $validator = Validator::make($request->all(), [
             'id_jeniskamar' => 'required|exists:jenis_kamar,id_jeniskamar',
             'no_kamar' => 'required|unique:kamar,no_kamar',
+            'pilih_bed' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -43,9 +44,11 @@ class KamarController extends Controller
         $kamar = Kamar::create([
             'id_jeniskamar' => $request->input('id_jeniskamar'),
             'no_kamar' => $request->input('no_kamar'),
+            'pilih_bed' => $request->input('pilih_bed'),
         ]);
 
         return response([
+            'status' => 'success',
             'message' => 'Kamar created successfully',
             'data' => $kamar,
         ], 201);
@@ -53,24 +56,29 @@ class KamarController extends Controller
 
     public function update(Request $request, Kamar $kamar)
     {
+        $id = $kamar->id_kamar;
+    
         $validator = Validator::make($request->all(), [
             'id_jeniskamar' => 'required|exists:jenis_kamar,id_jeniskamar',
-            'no_kamar' => 'required|unique:kamar',
+            'no_kamar' => 'required|unique:kamar,no_kamar,' . $id . ',id_kamar',
+            'pilih_bed' => 'required',
         ]);
-
+    
         if ($validator->fails()) {
             return response([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
             ], 400);
         }
-
+    
         $kamar->update([
             'id_jeniskamar' => $request->input('id_jeniskamar'),
             'no_kamar' => $request->input('no_kamar'),
+            'pilih_bed' => $request->input('pilih_bed'),
         ]);
-
+    
         return response([
+            'status' => 'success',
             'message' => 'Kamar updated successfully',
             'data' => $kamar,
         ], 200);
@@ -81,6 +89,7 @@ class KamarController extends Controller
         $kamar->delete();
 
         return response([
+            'status' => 'success',
             'message' => 'Kamar deleted successfully',
             'data' => $kamar,
         ], 200);
@@ -104,5 +113,25 @@ class KamarController extends Controller
             'message' => 'Search results',
             'data' => $kamar,
         ], 200);
+    }
+
+    public function show(Kamar $kamar)
+    {
+        $kamarWithJenisKamar = Kamar::with('JenisKamar')
+            ->where('id_kamar', $kamar->id_kamar)
+            ->first();
+
+        if ($kamarWithJenisKamar) {
+            return response([
+                'status' => 'success',
+                'message' => 'Retrieve Kamar details successfully',
+                'data' => $kamarWithJenisKamar,
+            ], 200);
+        }
+
+        return response([
+            'status' => 'error',
+            'message' => 'Kamar not found',
+        ], 404);
     }
 }

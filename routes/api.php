@@ -19,30 +19,46 @@ use PHPUnit\Framework\Attributes\Group;
 Auth::routes(['verify' => true]);
 
 Route::post('register', 'App\Http\Controllers\AuthController@register');
+Route::post('registerGrup', 'App\Http\Controllers\AuthController@registerGrup');
 Route::post('registerPegawai', 'App\Http\Controllers\AuthController@registerPegawai');
 Route::post('login', 'App\Http\Controllers\AuthController@login');
 Route::post('loginPegawai', 'App\Http\Controllers\AuthController@loginPegawai');
 Route::get('jenisKamarPublic', 'App\Http\Controllers\JenisKamarController@index');
+Route::post('forgetPassword', 'App\Http\Controllers\AuthController@forgetPassword');
+Route::get('customer/{customer}', 'App\Http\Controllers\CustomerController@show');
+Route::get('reservasi/{reservasi}', 'App\Http\Controllers\ReservasiController@show');
+Route::put('customer/{customer}', 'App\Http\Controllers\CustomerController@updateGrup');
 
 Route::middleware(['auth:sanctum', 'ability:pegawai'])->group(function(){
+
+    Route::get('customerGrup', 'App\Http\Controllers\CustomerController@indexGrup');
 
     Route::get('musim', 'App\Http\Controllers\MusimController@index');
     Route::post('musim', 'App\Http\Controllers\MusimController@store');
     Route::put('musim/{musim}', 'App\Http\Controllers\MusimController@update');
     Route::delete('musim/{musim}', 'App\Http\Controllers\MusimController@destroy');
     Route::get('/musim/search', 'App\Http\Controllers\MusimController@search');
+    Route::get('musim/{musim}', 'App\Http\Controllers\MusimController@show');
+
+    Route::get('tarifMusim', 'App\Http\Controllers\TarifMusimController@index');
+    Route::post('tarifMusim', 'App\Http\Controllers\TarifMusimController@store');
+    Route::put('tarifMusim/{tarifmusim}', 'App\Http\Controllers\TarifMusimController@update');
+    Route::delete('tarifMusim/{tarifmusim}', 'App\Http\Controllers\TarifMusimController@destroy');
 
     Route::get('fasilitasTambahan', 'App\Http\Controllers\FasilitasTambahanController@index');
     Route::post('fasilitasTambahan', 'App\Http\Controllers\FasilitasTambahanController@store');
     Route::put('fasilitasTambahan/{fasilitasTambahan}', 'App\Http\Controllers\FasilitasTambahanController@update');
     Route::delete('fasilitasTambahan/{fasilitasTambahan}', 'App\Http\Controllers\FasilitasTambahanController@destroy');
     Route::get('/fasilitasTambahan/search', 'App\Http\Controllers\FasilitasTambahanController@search');
+    Route::get('/fasilitasTambahan/{fasilitasTambahan}', 'App\Http\Controllers\FasilitasTambahanController@show');
 
     Route::get('kamar', 'App\Http\Controllers\KamarController@index');
     Route::post('kamar', 'App\Http\Controllers\KamarController@store');
     Route::put('kamar/{kamar}', 'App\Http\Controllers\KamarController@update');
     Route::delete('kamar/{kamar}', 'App\Http\Controllers\KamarController@destroy');
     Route::get('/kamar/search', 'App\Http\Controllers\KamarController@search');
+    Route::get('kamar/{kamar}', 'App\Http\Controllers\KamarController@show');
+   
     
     Route::get('jenisKamar', 'App\Http\Controllers\JenisKamarController@index');
     Route::post('jenisKamar', 'App\Http\Controllers\JenisKamarController@store');
@@ -68,6 +84,6 @@ Route::middleware(['auth:sanctum', 'ability:customer'])->group(function(){
     Route::put('customer', 'App\Http\Controllers\CustomerController@update');
 
     Route::get('reservasi', 'App\Http\Controllers\ReservasiController@index');
-    
+
     Route::post('logout', 'App\Http\Controllers\AuthController@logout');
 });

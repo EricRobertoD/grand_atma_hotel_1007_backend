@@ -21,4 +21,9 @@ class TarifMusim extends Model
     {
         return $this->belongsTo(Musim::class, 'id_musim');
     }
+    
+    public function jenisKamar()
+    {
+        return $this->belongsTo(JenisKamar::class, 'id_jeniskamar');
+    }
 }

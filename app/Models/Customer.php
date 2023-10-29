@@ -23,6 +23,8 @@ class Customer extends Authenticatable
         'no_identitas',
         'alamat',
         'nama_institusi',
+        'jawaban_sq',
+        'tipe',
     ];
 
     /**

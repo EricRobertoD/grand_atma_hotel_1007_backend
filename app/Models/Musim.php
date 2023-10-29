@@ -12,6 +12,7 @@ class Musim extends Model
     protected $primaryKey = 'id_musim';
     protected $fillable = [
         'id_musim',
+        'nama_musim',
         'jenis_musim',
         'tanggal_mulai_musim',
         'tanggal_selesai_musim'

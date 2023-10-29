@@ -28,6 +28,7 @@ class MusimController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'nama_musim' => 'required|string',
             'jenis_musim' => 'required|string',
             'tanggal_mulai_musim' => 'required|date',
             'tanggal_selesai_musim' => 'required|date',
@@ -41,12 +42,14 @@ class MusimController extends Controller
         }
 
         $musim = Musim::create([
+            'nama_musim' => $request->input('nama_musim'),
             'jenis_musim' => $request->input('jenis_musim'),
             'tanggal_mulai_musim' => $request->input('tanggal_mulai_musim'),
             'tanggal_selesai_musim' => $request->input('tanggal_selesai_musim'),
         ]);
 
         return response([
+            'status' => 'success',
             'message' => 'Musim created successfully',
             'data' => $musim,
         ], 201); 
@@ -54,19 +57,34 @@ class MusimController extends Controller
 
     public function update(Request $request, Musim $musim)
     {
+        $id = $musim->id_musim;
+
+        $now = date('Y-m-d');
+        $date = date('Y-m-d', strtotime($now. ' + 2 months'));
+        if ($musim->tanggal_mulai_musim < $date) {
+            return response([
+                'message' => 'Musim can\'t be updated Minimum 2 Months Before',
+                "errors" => [
+                    "musim" => ["Musim can't be updated Minimum 2 Months Before"]
+                ]
+            ], 400);
+        }
         $request->validate([
+            'nama_musim' => 'required|string',
             'jenis_musim' => 'required|string',
             'tanggal_mulai_musim' => 'required|date',
             'tanggal_selesai_musim' => 'required|date',
         ]);
 
         $musim->update([
+            'nama_musim' => $request->input('nama_musim'),
             'jenis_musim' => $request->input('jenis_musim'),
             'tanggal_mulai_musim' => $request->input('tanggal_mulai_musim'),
             'tanggal_selesai_musim' => $request->input('tanggal_selesai_musim'),
         ]);
 
         return response([
+            'status' => 'success',
             'message' => 'Musim updated successfully',
             'data' => $musim,
         ], 200);
@@ -83,6 +101,7 @@ class MusimController extends Controller
 
         $musim->delete();
             return response([
+                'status' => 'success',
                 'message' => 'Musim deleted successfully',
                 'data' => $musim
             ], 200);
@@ -103,6 +122,24 @@ class MusimController extends Controller
         return response([
             'message' => 'No matching Musim found',
             'data' => null,
+        ], 404);
+    }
+
+    public function show(Musim $musim)
+    {
+        // $musim = Musim::where('id_fasilitas', $musim->id_fasilitas)->first();
+
+        if ($musim) {
+            return response([
+                'status' => 'success',
+                'message' => 'Retrieve Musim details successfully',
+                'data' => $musim,
+            ], 200);
+        }
+
+        return response([
+            'status' => 'error',
+            'message' => 'Musim not found',
         ], 404);
     }
 }

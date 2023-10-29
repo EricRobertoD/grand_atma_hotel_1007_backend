@@ -13,7 +13,8 @@ class Kamar extends Model
     protected $fillable = [
         'id_kamar',
         'id_jeniskamar',
-        'no_kamar'
+        'no_kamar',
+        'pilih_bed'
     ];
     public function JenisKamar()
     {

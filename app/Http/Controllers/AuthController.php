@@ -18,6 +18,8 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $registerData = $request->all();
+        $registerData['tipe'] = 'personal'; 
+
         $validate = Validator::make($registerData, [
             'username' => 'required|string|max:255',
             'nama' => 'required|string|max:255',
@@ -25,8 +27,9 @@ class AuthController extends Controller
             'password' => 'required|min:6|max:255',
             'no_telp' => 'required',
             'no_identitas' => 'required',
-
+            'jawaban_sq' => 'required',
         ]);
+    
         if ($validate->fails()) {
             $errors = $validate->errors();
             $response = [
@@ -36,8 +39,47 @@ class AuthController extends Controller
             
             return response()->json($response, 400);
         }
+    
         $registerData['password'] = bcrypt($registerData['password']);
         $customer = Customer::create($registerData);
+    
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Register Berhasil!',
+            'data' => $customer
+        ], 200);
+    }
+
+    public function registerGrup(Request $request)
+    {
+        $registerData = $request->all();
+        $registerData['tipe'] = 'grup'; 
+        
+        $validate = Validator::make($registerData, [
+            'username' => 'required|string|max:255',
+            'nama' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:customer',
+            'password' => 'required|min:6|max:255',
+            'no_telp' => 'required',
+            'no_identitas' => 'required',
+            'nama_institusi' => 'required',
+            'alamat' => 'required',
+            'jawaban_sq' => 'required',
+        ]);
+    
+        if ($validate->fails()) {
+            $errors = $validate->errors();
+            $response = [
+                'message' => 'Registrasi gagal. Silakan periksa semua bagian yang ditandai.',
+                'errors' => $errors->toArray()
+            ];
+            
+            return response()->json($response, 400);
+        }
+    
+        $registerData['password'] = bcrypt($registerData['password']);
+        $customer = Customer::create($registerData);
+    
         return response()->json([
             'status' => 'success',
             'message' => 'Register Berhasil!',
@@ -60,7 +102,7 @@ class AuthController extends Controller
         if ($validate->fails()) {
             $errors = $validate->errors();
             $response = [
-                'message' => 'Registrasi gagal. Silakan periksa semua bagian yang ditandai.',
+                'message' => 'Registrasi gagal. ',
                 'errors' => $errors->toArray()
             ];
             
@@ -196,5 +238,42 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'Password changed successfully',
         ], 200);
+    }
+
+    public function forgetPassword(Request $request) {
+        $customer = Customer::where('email', $request->email)->first();
+        if(!$customer) {
+            return response([
+                "errors" => [
+                    "message" => ["Email Tidak Ditemukan"]
+                ]
+            ], 400);
+        }
+        else{
+            $jawaban_sq = $request->jawaban_sq;
+            if($jawaban_sq == $customer->jawaban_sq){
+                $customer->password = Hash::make($request->password);
+                $customer->save();
+
+                return response([
+                    'status' => 'success',
+                    'message' => 'Password berhasil diubah'
+                ], 200);
+            }
+            else{
+                return response([
+                    "errors" => [
+                        "message" => ["Jawaban Security Question salah"]
+                    ]
+                ], 400);
+            }
+        }
+
+        /**
+         * {
+         *  "email": "",
+         * "jawaban_sq": ""
+         * }
+         */
     }
 }

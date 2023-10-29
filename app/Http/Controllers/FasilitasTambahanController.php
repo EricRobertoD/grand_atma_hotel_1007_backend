@@ -44,6 +44,7 @@ class FasilitasTambahanController extends Controller
         ]);
 
         return response([
+            'status' => 'success',
             'message' => 'Fasilitas Tambahan created successfully',
             'data' => $fasilitasTambahan
         ], 201);
@@ -70,6 +71,7 @@ class FasilitasTambahanController extends Controller
         ]);
     
         return response([
+            'status' => 'success',
             'message' => 'Fasilitas Tambahan updated successfully',
             'data' => $fasilitasTambahan
         ], 200);
@@ -79,6 +81,7 @@ class FasilitasTambahanController extends Controller
         $fasilitasTambahan->delete();
     
         return response([
+            'status' => 'success',
             'message' => 'Fasilitas Tambahan deleted successfully',
             'data' => $fasilitasTambahan
         ], 200);
@@ -99,6 +102,24 @@ class FasilitasTambahanController extends Controller
         return response([
             'message' => 'No matching Fasilitas Tambahan found',
             'data' => null,
+        ], 404);
+    }
+
+    public function show(FasilitasTambahan $fasilitasTambahan)
+    {
+        // $fasilitasTambahan = FasilitasTambahan::where('id_fasilitas', $fasilitasTambahan->id_fasilitas)->first();
+
+        if ($fasilitasTambahan) {
+            return response([
+                'status' => 'success',
+                'message' => 'Retrieve Fasilitas Tambahan details successfully',
+                'data' => $fasilitasTambahan,
+            ], 200);
+        }
+
+        return response([
+            'status' => 'error',
+            'message' => 'Fasilitas Tambahan not found',
         ], 404);
     }
     
