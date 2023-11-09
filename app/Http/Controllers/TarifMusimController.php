@@ -37,12 +37,23 @@ class TarifMusimController extends Controller
             'tarif_musim' => 'required',
         ]);
 
+
         if ($validator->fails()) {
             return response([
                 'message' => 'Validation failed',
                 'errors' => $validator->errors(),
             ], 400);
         }
+        
+        $checkTarif = TarifMusim::where('id_jeniskamar', $request->id_jeniskamar)->where('id_musim', $request->id_musim)->first();
+    if ($checkTarif) {
+        return response()->json([
+            'status' => "error",
+            'errors' => [
+                'message' => 'jenis kamar dan musim sudah ada',
+            ],
+      ], 400);
+  }
 
         $tarifmusim = TarifMusim::create([
             'id_jeniskamar' => $request->input('id_jeniskamar'),

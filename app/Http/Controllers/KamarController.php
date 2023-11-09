@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Kamar;
 use App\Models\JenisKamar;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class KamarController extends Controller
 {
@@ -134,4 +135,42 @@ class KamarController extends Controller
             'message' => 'Kamar not found',
         ], 404);
     }
+
+    public function kamarAvailable()
+{
+    // 1. Dapatkan jumlah kamar berdasarkan jenis kamar
+    $totalKamarPerJenis = Kamar::select('id_jeniskamar', DB::raw('count(*) as total'))
+        ->groupBy('id_jeniskamar')
+        ->get();
+
+    // 2. Dapatkan jumlah kamar yang sudah dibooking untuk rentang tanggal
+    $tanggalMulai = 'tanggal_mulai'; // Gantilah dengan nama kolom yang sesuai
+    $tanggalSelesai = 'tanggal_selesai'; // Gantilah dengan nama kolom yang sesuai
+    $kamarDibooking = DB::table('reservasi_kamar')
+        ->join('reservasi', 'reservasi_kamar.id_reservasi', '=', 'reservasi.id_reservasi')
+        ->select('kamar.id_jeniskamar', DB::raw('count(*) as total'))
+        ->whereDate($tanggalMulai, '<=', now()) // Gantilah dengan tanggal yang sesuai
+        ->whereDate($tanggalSelesai, '>=', now()) // Gantilah dengan tanggal yang sesuai
+        ->groupBy('kamar.id_jeniskamar')
+        ->get();
+
+    // 3. Hitung kamar yang masih tersedia
+    $kamarTersedia = [];
+
+    foreach ($totalKamarPerJenis as $jenis) {
+        $jenisId = $jenis->id_jeniskamar;
+        $totalKamar = $jenis->total;
+
+        $kamarDibooked = $kamarDibooking->first(function ($item) use ($jenisId) {
+            return $item->id_jeniskamar == $jenisId;
+        });
+
+        $kamarTersedia[$jenisId] = $totalKamar - ($kamarDibooked ? $kamarDibooked->total : 0);
+    }
+
+    return response([
+        'message' => 'Ketersediaan Kamar',
+        'data' => $kamarTersedia,
+    ], 200);
+}
 }

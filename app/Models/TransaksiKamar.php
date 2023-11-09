@@ -15,8 +15,8 @@ class TransaksiKamar extends Model
         'id_reservasi',
         'id_jeniskamar',
         'id_kamar',
-        'jenis_bed',
-        'harga_total'
+        'harga_total',
+        'jumlah'
     ];
 
     public function Kamar()
@@ -26,7 +26,7 @@ class TransaksiKamar extends Model
 
     public function JenisKamar()
     {
-        return $this->belongsTo(JenisKamar::class, 'id_jenis_kamar');
+        return $this->belongsTo(JenisKamar::class, 'id_jeniskamar');
     }
 
     public function Reservasi()

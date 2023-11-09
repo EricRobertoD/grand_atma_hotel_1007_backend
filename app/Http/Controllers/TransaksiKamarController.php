@@ -28,6 +28,7 @@ class TransaksiKamarController extends Controller
             'id_kamar' => 'required|exists:kamar,id_kamar',
             'jenis_bed' => 'required|string',
             'harga_total' => 'required|numeric',
+            'jumlah' => 1,
         ]);
 
         if ($validator->fails()) {

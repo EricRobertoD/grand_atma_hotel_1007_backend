@@ -28,7 +28,7 @@ class MusimController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nama_musim' => 'required|string',
+            'nama_musim' => 'required|string|unique:musim',
             'jenis_musim' => 'required|string',
             'tanggal_mulai_musim' => 'required|date',
             'tanggal_selesai_musim' => 'required|date',
@@ -70,7 +70,7 @@ class MusimController extends Controller
             ], 400);
         }
         $request->validate([
-            'nama_musim' => 'required|string',
+            'nama_musim' => 'required|string|unique:musim,nama_musim,' . $id . ',id_musim',
             'jenis_musim' => 'required|string',
             'tanggal_mulai_musim' => 'required|date',
             'tanggal_selesai_musim' => 'required|date',
@@ -89,22 +89,16 @@ class MusimController extends Controller
             'data' => $musim,
         ], 200);
     }
-    public function destroy($id)
+    
+    public function destroy(Musim $musim)
     {
-        $musim = Musim::find($id);
-
-        if (!$musim) {
-            return response([
-            'message' => 'Musim not found',
-        ], 404); 
-        }
-
         $musim->delete();
-            return response([
-                'status' => 'success',
-                'message' => 'Musim deleted successfully',
-                'data' => $musim
-            ], 200);
+
+        return response([
+            'status' => 'success',
+            'message' => 'Musim deleted successfully',
+            'data' => $musim,
+        ], 200);
     }
     
     public function search(Request $request)

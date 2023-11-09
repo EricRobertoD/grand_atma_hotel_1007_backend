@@ -14,6 +14,8 @@ class Reservasi extends Model
         'id_reservasi',
         'id_customer',
         'id_booking',
+        'tanggal_mulai',
+        'tanggal_selesai',
         'tanggal_reservasi',
         'tanggal_checkin',
         'tanggal_checkout',
@@ -24,6 +26,7 @@ class Reservasi extends Model
         'total_deposit',
         'tanggal_pembayaran',
         'tanggal_kirim_ttr',
+        "upload_gambar",
         'permintaan_khusus'
 
     ];
@@ -43,5 +46,9 @@ class Reservasi extends Model
     public function TransaksiKamar()
     {
         return $this->hasMany(TransaksiKamar::class, 'id_reservasi');
+    }
+    public function Pegawai()
+    {
+        return $this->hasMany(Pegawai::class, 'id_reservasi');
     }
 }

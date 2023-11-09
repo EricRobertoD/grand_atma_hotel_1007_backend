@@ -25,7 +25,7 @@ class FasilitasTambahanController extends Controller
     
     public function store(Request $request){
         $validator = Validator::make($request->all(), [
-            'fasilitas_tambahan' => 'required|string',
+            'fasilitas_tambahan' => 'required|string|unique:fasilitas_tambahan',
             'tarif' => 'required|numeric',
             'satuan' => 'required|string',
         ]);
@@ -51,8 +51,12 @@ class FasilitasTambahanController extends Controller
     }
 
     public function update(Request $request, FasilitasTambahan $fasilitasTambahan){
+
+        
+        $id = $fasilitasTambahan->id_fasilitas;
+
         $validator = Validator::make($request->all(), [
-            'fasilitas_tambahan' => 'string',
+            'fasilitas_tambahan' => 'string|unique:fasilitas_tambahan,fasilitas_tambahan,' . $id . ',id_fasilitas',
             'tarif' => 'numeric',
             'satuan' => 'string',
         ]);

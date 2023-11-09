@@ -35,11 +35,11 @@ class CustomerController extends Controller
             'message' => 'Customer not found',
         ], 404);
     }
-
+    
     public function indexGrup()
     {
-        $customers = Customer::where('tipe', 'grup')->get();
-
+        $customers = Customer::with('Reservasi')->where('tipe', 'grup')->get();
+    
         return response([
             'message' => 'Retrieve all "grup" customers successfully',
             'data' => $customers,

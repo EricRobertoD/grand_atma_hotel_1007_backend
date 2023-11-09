@@ -59,12 +59,10 @@ class AuthController extends Controller
             'username' => 'required|string|max:255',
             'nama' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:customer',
-            'password' => 'required|min:6|max:255',
             'no_telp' => 'required',
             'no_identitas' => 'required',
             'nama_institusi' => 'required',
             'alamat' => 'required',
-            'jawaban_sq' => 'required',
         ]);
     
         if ($validate->fails()) {
@@ -76,8 +74,6 @@ class AuthController extends Controller
             
             return response()->json($response, 400);
         }
-    
-        $registerData['password'] = bcrypt($registerData['password']);
         $customer = Customer::create($registerData);
     
         return response()->json([
@@ -178,16 +174,25 @@ class AuthController extends Controller
             return response(['message' => 'Invalid Credentials user'], 401);
         }
     }
-
     public function logout(Request $request)
     {
-        $customer = $request->user();
-        $customer->token()->revoke();
-        return response([
-            'message' => 'Logout Success',
-            'user' => $customer
-        ]);
+        if (Auth::guard('sanctum')->check()) {
+            $user = Auth::guard('sanctum')->user();
+            $user->tokens->each(function ($token) {
+                $token->delete();
+            });
+    
+            return response()->json([
+                'message' => 'Logout Success',
+                'user' => $user
+            ], 200);
+        } else {
+            return response()->json([
+                'message' => 'User not authenticated',
+            ], 401); // Unauthorized
+        }
     }
+    
     
     public function logoutPegawai(Request $request)
     {
@@ -196,7 +201,7 @@ class AuthController extends Controller
         return response([
             'message' => 'Logout Success',
             'user' => $pegawai
-        ]);
+        ],200);
     }
 
     public function changePassword(Request $request)
@@ -217,11 +222,10 @@ class AuthController extends Controller
         $currentPassword = $request->input('current_password');
         $newPassword = $request->input('password');
     
-        // Verify the current password
         if (!Hash::check($currentPassword, $customer->password)) {
             return response([
                 "errors" => [
-                    "old_password" => [
+                    "password" => [
                       "password lama salah."
                     ]
                   ]

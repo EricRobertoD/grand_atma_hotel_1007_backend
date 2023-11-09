@@ -22,12 +22,12 @@ class JenisKamar extends Model
     ];
     public function Kamar()
     {
-        return $this->hasMany(Kamar::class, 'id_jenis_kamar');
+        return $this->hasMany(Kamar::class, 'id_jeniskamar');
     }
 
     public function TarifMusim()
     {
-        return $this->hasMany(TarifMusim::class, 'id_jenis_kamar');
+        return $this->hasMany(TarifMusim::class, 'id_jeniskamar');
     }
 
     public function TransaksiKamar()

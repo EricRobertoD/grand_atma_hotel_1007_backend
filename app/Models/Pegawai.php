@@ -32,6 +32,11 @@ class Pegawai extends Authenticatable
         return $this->hasMany(NotaPelunasan::class, 'id_pegawai');
     }
 
+    public function Reservasi()
+    {
+        return $this->hasMany(Reservasi::class, 'id_reservasi');
+    }
+
     protected $hidden = [
         'password',
         'remember_token',
