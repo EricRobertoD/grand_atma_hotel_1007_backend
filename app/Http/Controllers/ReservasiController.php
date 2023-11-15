@@ -193,6 +193,148 @@ class ReservasiController extends Controller
         ], 201);
     }
 
+    public function storeGrup(Request $request)
+    {
+        $tanggal_mulai = $request->input('tanggal_mulai');
+        $tanggal_selesai = $request->input('tanggal_selesai');
+
+        // Extract the input for each room type
+        $roomTypes = [
+            'Superior' => $request->input('superior'),
+            'Double Deluxe' => $request->input('double_deluxe'),
+            'Executive Deluxe' => $request->input('executive_deluxe'),
+            'Junior Suite' => $request->input('junior_suite'),
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'id_customer' => 'required',
+            'dewasa' => 'required|integer',
+            'anak' => 'required|integer',
+            'tanggal_mulai' => 'required',
+            'tanggal_selesai' => 'required',
+            // Add validation rules for each room type
+            'superior' => 'integer',
+            'double_deluxe' => 'integer',
+            'executive_deluxe' => 'integer',
+            'junior_suite' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 400);
+        }
+
+        $data = $this->kamarAvailable($request);
+
+        // Check if any room type is selected
+        $selectedRoomTypes = array_filter($roomTypes, function ($quantity) {
+            return $quantity > 0;
+        });
+
+        if (empty($selectedRoomTypes)) {
+            return response([
+                'message' => 'No room types selected or insufficient quantity',
+            ], 400);
+        }
+
+        // Initialize an array to store the reserved rooms
+        $reservedRooms = [];
+
+        // Create a single Reservasi record for all selected room types
+        $reservasi = new Reservasi([
+            'id_customer' => $request->input('id_customer'),
+            'id_booking' => 'G' . now('Asia/Jakarta')->format('mdy') . '-' . $this->generateIncrementedNumber(),
+            'status' => 'Reservasi',
+            'dewasa' => $request->input('dewasa'),
+            'anak' => $request->input('anak'),
+            'total_deposit' => '300000',
+            'tanggal_mulai' => $tanggal_mulai,
+            'tanggal_selesai' => $tanggal_selesai,
+        ]);
+
+        $reservasi->save();
+
+        $availabilityFailed = false; // Initialize availability check
+        $totalPrice = 0; // Initialize total price
+
+        foreach ($selectedRoomTypes as $jenis => $quantity) {
+            $availability = $data['data'][$jenis];
+            $availableRooms = $availability['rooms'];
+            $tersedia = $availability['tersedia'];
+
+            if ($quantity > $tersedia) {
+                // If requested quantity is more than available, set availabilityFailed to true
+                $availabilityFailed = true;
+                break; // Stop processing other room types
+            }
+
+            for ($i = 0; $i < $quantity; $i++) {
+                if (count($availableRooms) > 0) {
+                    // Get the first available room
+                    $firstAvailableRoom = reset($availableRooms);
+
+                    // Remove the first available room from the list
+                    array_shift($availableRooms);
+
+                    // Calculate the number of days between 'tanggal_mulai' and 'tanggal_selesai'
+                    $daysDiff = now('Asia/Jakarta')->parse($tanggal_mulai)->diffInDays(now('Asia/Jakarta')->parse($tanggal_selesai));
+
+                    // Determine the room tariff (tarif_default or tarif_season)
+                    $roomTariff = isset($availability['tarif_season']) ? $availability['tarif_season'] : $availability['tarif_default'];
+
+                    // Calculate the total price
+                    $hargaTotal = $daysDiff * $roomTariff;
+
+                    // Create and save the TransaksiKamar record with the reserved room
+                    $transaksiKamar = new TransaksiKamar([
+                        'id_reservasi' => $reservasi->id_reservasi,
+                        'id_jeniskamar' => $firstAvailableRoom['id_jeniskamar'],
+                        'id_kamar' => $firstAvailableRoom['id_kamar'],
+                        'harga_total' => $hargaTotal,
+                        'jumlah' => 1, // You may adjust the quantity as needed
+                    ]);
+
+                    $transaksiKamar->save();
+
+                    // Add the reserved room to the list
+                    $reservedRooms[] = $firstAvailableRoom;
+
+                    // Add to the total price
+                    $totalPrice += $hargaTotal;
+                }
+            }
+        }
+
+        if ($availabilityFailed) {
+            // Rollback the transaction and return an error response
+            $reservasi->delete();
+
+            return response([
+                'message' => 'Not enough available rooms for the specified room types',
+            ], 400);
+        }
+
+        if (empty($reservedRooms)) {
+            return response([
+                'message' => 'No available rooms for the specified room types or insufficient quantity',
+            ], 400);
+        }
+
+        // Update the total deposit with the calculated total price
+        $reservasi->total_deposit = $totalPrice;
+        $reservasi->save();
+
+        return response([
+            'status' => 'success',
+            'message' => 'Reservasi created successfully',
+            'reserved_rooms' => $reservedRooms, // Provide the list of reserved rooms
+        ], 201);
+    }
+
+
+
 
     public function storeAdd(Request $request)
     {
@@ -452,6 +594,62 @@ class ReservasiController extends Controller
         ], 200);
     }
 
+    public function getPembatalanGrup()
+    {
+        $reservasiPembatalan = Reservasi::whereHas('Customer', function ($query) {
+            $query->where('tipe', 'Grup');
+        })
+            ->whereDate('tanggal_mulai', '>', now('Asia/Jakarta')->toDateString())
+            ->with('Customer')
+            ->with('TransaksiFasilitasTambahan.FasilitasTambahan')
+            ->with('TransaksiKamar.Kamar.JenisKamar')
+            ->with('NotaPelunasan.Pegawai')
+            ->get();
+
+        return response([
+            'message' => 'Retrieve all Reservasi Pembatalan Success',
+            'data' => $reservasiPembatalan,
+        ], 200);
+    }
 
 
+
+    public function destroy(Reservasi $reservasi)
+    {
+        if ($reservasi->status === 'Lunas') {
+            if (now('Asia/Jakarta') < now('Asia/Jakarta')->parse($reservasi->tanggal_mulai)) {
+                $daysDifference = now('Asia/Jakarta')->parse($reservasi->tanggal_mulai)->diffInDays(now('Asia/Jakarta'));
+
+                if ($daysDifference > 7) {
+                    $message = 'Karena batal sebelum h-7 uang akan dikembalikan';
+                } else {
+                    $message = 'Karena batal h-7 gada uang yang dikembalikan';
+                }
+
+                $reservasi->delete();
+
+                return response([
+                    'status' => 'success',
+                    'message' => $message,
+                ], 200);
+            }
+
+            return response([
+                'status' => 'error',
+                'message' => 'Cannot delete past reservations',
+            ], 400);
+        } elseif ($reservasi->status === 'Reservasi') {
+            $reservasi->delete();
+
+            return response([
+                'status' => 'success',
+                'message' => 'Berhasil Batal, belum membayar',
+            ], 200);
+        }
+
+        return response([
+            'status' => 'error',
+            'message' => 'Invalid reservation status',
+        ], 400);
+    }
 }

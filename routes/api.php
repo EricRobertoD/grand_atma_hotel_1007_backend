@@ -36,6 +36,7 @@ Route::get('tandaTerimaReservasi/{tandaTerimaReservasi}', 'App\Http\Controllers\
 Route::post('transaksiFasilitas', 'App\Http\Controllers\transaksiFasilitasController@store');
 Route::get('fasilitasTambahan', 'App\Http\Controllers\FasilitasTambahanController@index');
 Route::post('updateBayar/{reservasi}', 'App\Http\Controllers\ReservasiController@updateBayar');
+Route::delete('reservasi/{reservasi}', 'App\Http\Controllers\ReservasiController@destroy');
 
 
 Route::middleware(['auth:sanctum', 'ability:pegawai'])->group(function(){
@@ -79,6 +80,9 @@ Route::middleware(['auth:sanctum', 'ability:pegawai'])->group(function(){
     Route::delete('transaksiKamar/{transaksiKamar}', 'App\Http\Controllers\transaksiKamarController@destroy');
     Route::get('/transaksiKamar/search', 'App\Http\Controllers\transaksiKamarController@search');
 
+    Route::get('getPembatalanGrup', 'App\Http\Controllers\ReservasiController@getPembatalanGrup');
+
+    Route::post('reservasiGrup', 'App\Http\Controllers\ReservasiController@storeGrup');
 });
 
 
@@ -93,4 +97,5 @@ Route::middleware(['auth:sanctum', 'ability:customer'])->group(function(){
 
     Route::get('reservasi', 'App\Http\Controllers\ReservasiController@index');
     Route::get('getPembatalan', 'App\Http\Controllers\ReservasiController@getPembatalan');
+
 });
