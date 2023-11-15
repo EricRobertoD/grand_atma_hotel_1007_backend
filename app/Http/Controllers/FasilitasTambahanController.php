@@ -29,6 +29,7 @@ class FasilitasTambahanController extends Controller
             'tarif' => 'required|numeric',
             'satuan' => 'required|string',
         ]);
+        
 
         if ($validator->fails()) {
             return response([
