@@ -491,33 +491,36 @@ class ReservasiController extends Controller
     }
 
     
-public function updateStatus(Request $request, Reservasi $reservasi)
-{
-    $request->validate([
-        'status' => 'required',
-    ]);
-
-    $status = $request->input('status');
-
-    if ($status == 'Check In' || $status == 'Check Out') {
-        $dateField = ($status == 'Check In') ? 'tanggal_checkin' : 'tanggal_checkout';
-        $reservasi->update([
-            'status' => $status,
-            $dateField => Carbon::now('Asia/Jakarta')->toDateTimeString(),
+    public function updateStatus(Request $request, Reservasi $reservasi)
+    {
+        $request->validate([
+            'status' => 'required',
         ]);
-    } else {
-        $reservasi->update([
-            'status' => $status,
-            'total_deposit' => '300000',
-        ]);
+    
+        $status = $request->input('status');
+    
+        if ($status == 'Check In' || $status == 'Check Out') {
+            $dateField = ($status == 'Check In') ? 'tanggal_checkin' : 'tanggal_checkout';
+    
+            $totalDeposit = ($status == 'Check In') ? '300000' : $reservasi->total_deposit;
+    
+            $reservasi->update([
+                'status' => $status,
+                'total_deposit' => $totalDeposit,
+                $dateField => Carbon::now('Asia/Jakarta')->toDateTimeString(),
+            ]);
+        } else {
+            $reservasi->update([
+                'status' => $status,
+            ]);
+        }
+    
+        return response([
+            'status' => 'success',
+            'message' => 'Status updated successfully',
+            'data' => $reservasi,
+        ], 200);
     }
-
-    return response([
-        'status' => 'success',
-        'message' => 'Status updated successfully',
-        'data' => $reservasi,
-    ], 200);
-}
 
 
     public function kamarAvailable(Request $request)
