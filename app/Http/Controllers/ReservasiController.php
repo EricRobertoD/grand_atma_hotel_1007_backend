@@ -125,7 +125,6 @@ class ReservasiController extends Controller
             'status' => 'Reservasi',
             'dewasa' => $request->input('dewasa'),
             'anak' => $request->input('anak'),
-            'total_deposit' => '300000',
             'tanggal_mulai' => $tanggal_mulai,
             'tanggal_selesai' => $tanggal_selesai,
         ]);
@@ -199,7 +198,7 @@ class ReservasiController extends Controller
         }
 
         // Update the total deposit with the calculated total price
-        $reservasi->total_deposit = $totalPrice;
+        $reservasi->total_jaminan = $totalPrice;
         $reservasi->save();
 
         return response([
@@ -265,7 +264,6 @@ class ReservasiController extends Controller
             'status' => 'Reservasi',
             'dewasa' => $request->input('dewasa'),
             'anak' => $request->input('anak'),
-            'total_deposit' => '300000',
             'tanggal_mulai' => $tanggal_mulai,
             'tanggal_selesai' => $tanggal_selesai,
         ]);
@@ -339,7 +337,7 @@ class ReservasiController extends Controller
         }
 
         // Update the total deposit with the calculated total price
-        $reservasi->total_deposit = $totalPrice;
+        $reservasi->total_jaminan = $totalPrice;
         $reservasi->save();
 
         return response([
@@ -510,6 +508,7 @@ public function updateStatus(Request $request, Reservasi $reservasi)
     } else {
         $reservasi->update([
             'status' => $status,
+            'total_deposit' => '300000',
         ]);
     }
 
