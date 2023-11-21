@@ -11,6 +11,7 @@ use App\Models\Kamar;
 use App\Models\JenisKamar;
 use App\Models\TarifMusim;
 use App\Models\TransaksiKamar;
+use Carbon\Carbon;
 
 class ReservasiController extends Controller
 {
@@ -31,6 +32,21 @@ class ReservasiController extends Controller
 
         return response([
             'message' => 'Retrieve all "grup" reservasis successfully',
+            'data' => $reservasi,
+        ], 200);
+    }
+
+    public function indexCheckIn()
+    {
+        $reservasi = Reservasi::with('Customer')
+            ->with('TransaksiFasilitasTambahan.FasilitasTambahan')
+            ->with('TransaksiKamar.Kamar.JenisKamar')
+            ->with('NotaPelunasan')
+            ->where('status', 'Lunas')
+            ->get();
+
+        return response([
+            'message' => 'Retrieve all "grup" reservasis with "Lunas" status successfully',
             'data' => $reservasi,
         ], 200);
     }
@@ -475,6 +491,35 @@ class ReservasiController extends Controller
             'data' => $reservasi,
         ], 200);
     }
+
+    
+public function updateStatus(Request $request, Reservasi $reservasi)
+{
+    $request->validate([
+        'status' => 'required',
+    ]);
+
+    $status = $request->input('status');
+
+    if ($status == 'Check In' || $status == 'Check Out') {
+        $dateField = ($status == 'Check In') ? 'tanggal_checkin' : 'tanggal_checkout';
+        $reservasi->update([
+            'status' => $status,
+            $dateField => Carbon::now('Asia/Jakarta')->toDateTimeString(),
+        ]);
+    } else {
+        $reservasi->update([
+            'status' => $status,
+        ]);
+    }
+
+    return response([
+        'status' => 'success',
+        'message' => 'Status updated successfully',
+        'data' => $reservasi,
+    ], 200);
+}
+
 
     public function kamarAvailable(Request $request)
     {

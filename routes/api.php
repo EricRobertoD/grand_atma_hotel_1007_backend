@@ -42,6 +42,8 @@ Route::delete('reservasi/{reservasi}', 'App\Http\Controllers\ReservasiController
 Route::middleware(['auth:sanctum', 'ability:pegawai'])->group(function(){
 
     Route::get('customerGrup', 'App\Http\Controllers\CustomerController@indexGrup');
+    Route::get('checkIn', 'App\Http\Controllers\ReservasiController@indexCheckIn');
+    Route::put('updateStatus/{reservasi}', 'App\Http\Controllers\ReservasiController@updateStatus');
 
     Route::get('musim', 'App\Http\Controllers\MusimController@index');
     Route::post('musim', 'App\Http\Controllers\MusimController@store');
