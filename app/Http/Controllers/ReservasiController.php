@@ -42,7 +42,7 @@ class ReservasiController extends Controller
             ->with('TransaksiFasilitasTambahan.FasilitasTambahan')
             ->with('TransaksiKamar.Kamar.JenisKamar')
             ->with('NotaPelunasan')
-            ->where('status', 'Lunas')
+            ->where('status', '!=', 'Reservasi')
             ->get();
 
         return response([
