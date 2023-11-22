@@ -497,6 +497,7 @@ class ReservasiController extends Controller
         $reservasi->update([
             'status' => $request->input('status'),
             'upload_gambar' => $fileNameToStore,
+            'total_jaminan' => $request->input('total_jaminan'),
         ]);
 
         return response([
