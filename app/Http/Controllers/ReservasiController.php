@@ -12,6 +12,7 @@ use App\Models\JenisKamar;
 use App\Models\TarifMusim;
 use App\Models\TransaksiKamar;
 use Carbon\Carbon;
+use App\Models\NotaPelunasan;
 
 class ReservasiController extends Controller
 {
@@ -507,38 +508,76 @@ class ReservasiController extends Controller
         ], 200);
     }
 
-
-    public function updateStatus(Request $request, Reservasi $reservasi)
+    public function checkIn(Request $request, Reservasi $reservasi)
     {
         $request->validate([
             'status' => 'required',
         ]);
-
-        $status = $request->input('status');
-
-        if ($status == 'Check In' || $status == 'Check Out') {
-            $dateField = ($status == 'Check In') ? 'tanggal_checkin' : 'tanggal_checkout';
-
-            $totalDeposit = ($status == 'Check In') ? '300000' : $reservasi->total_deposit;
-
-            $reservasi->update([
-                'status' => $status,
-                'total_deposit' => $totalDeposit,
-                $dateField => Carbon::now('Asia/Jakarta')->toDateTimeString(),
-            ]);
-        } else {
-            $reservasi->update([
-                'status' => $status,
-            ]);
-        }
-
+    
+        $dateField = 'tanggal_checkin';
+        $totalDeposit = '300000';
+    
+        $reservasi->update([
+            'status' => 'Check In',
+            'total_deposit' => $totalDeposit,
+            $dateField => Carbon::now('Asia/Jakarta')->toDateTimeString(),
+        ]);
+    
         return response([
             'status' => 'success',
-            'message' => 'Status updated successfully',
+            'message' => 'Checked In successfully',
             'data' => $reservasi,
         ], 200);
     }
+    
+    public function checkOut(Request $request, Reservasi $reservasi)
+{
+    $request->validate([
+        'status' => 'required',
+    ]);
 
+    $dateField = 'tanggal_checkout';
+
+    $reservasi->update([
+        'status' => 'Check Out',
+        $dateField => Carbon::now('Asia/Jakarta')->toDateTimeString(),
+    ]);
+
+    // Generate no_nota based on id_booking
+    $idBookingPrefix = substr($reservasi->id_booking, 0, 1);
+    $noNota = $idBookingPrefix . now('Asia/Jakarta')->format('mdy') . '-' . $this->generateIncrementedNumberNota($idBookingPrefix);
+
+    // Create NotaPelunasan
+    $notaPelunasan = NotaPelunasan::create([
+        'id_pegawai' => auth()->user()->id,
+        'id_reservasi' => $reservasi->id,
+        'no_nota' => $noNota,
+        // Add other necessary fields for NotaPelunasan
+    ]);
+
+    return response([
+        'status' => 'success',
+        'message' => 'Checked Out successfully',
+        'data' => [
+            'reservasi' => $reservasi,
+            'notaPelunasan' => $notaPelunasan,
+        ],
+    ], 200);
+}
+
+private function generateIncrementedNumberNota($prefix)
+{
+    $lastNotaPelunasan = NotaPelunasan::where('no_nota', 'like', $prefix . '%')->orderBy('id_nota', 'desc')->first();
+
+    if ($lastNotaPelunasan) {
+        $lastNumber = (int) substr($lastNotaPelunasan->no_nota, -3);
+        $nextNumber = $lastNumber + 1;
+    } else {
+        $nextNumber = 1;
+    }
+
+    return sprintf('%03d', $nextNumber);
+}
 
     public function kamarAvailable(Request $request)
     {
