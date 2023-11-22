@@ -51,6 +51,22 @@ class ReservasiController extends Controller
         ], 200);
     }
 
+    public function indexNota()
+    {
+        $reservasi = Reservasi::with('Customer')
+            ->with('TransaksiFasilitasTambahan.FasilitasTambahan')
+            ->with('TransaksiKamar.Kamar.JenisKamar')
+            ->with('NotaPelunasan')
+            ->where('status', '=', 'Check Out')
+            ->get();
+
+        return response([
+            'message' => 'Retrieve all "grup" reservasis with "Check Out" status successfully',
+            'data' => $reservasi,
+        ], 200);
+    }
+
+
     public function show($id_customer)
     {
         $reservations = Reservasi::where('id_customer', $id_customer)->get();
@@ -490,20 +506,20 @@ class ReservasiController extends Controller
         ], 200);
     }
 
-    
+
     public function updateStatus(Request $request, Reservasi $reservasi)
     {
         $request->validate([
             'status' => 'required',
         ]);
-    
+
         $status = $request->input('status');
-    
+
         if ($status == 'Check In' || $status == 'Check Out') {
             $dateField = ($status == 'Check In') ? 'tanggal_checkin' : 'tanggal_checkout';
-    
+
             $totalDeposit = ($status == 'Check In') ? '300000' : $reservasi->total_deposit;
-    
+
             $reservasi->update([
                 'status' => $status,
                 'total_deposit' => $totalDeposit,
@@ -514,7 +530,7 @@ class ReservasiController extends Controller
                 'status' => $status,
             ]);
         }
-    
+
         return response([
             'status' => 'success',
             'message' => 'Status updated successfully',

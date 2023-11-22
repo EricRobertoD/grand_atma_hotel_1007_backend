@@ -43,6 +43,7 @@ Route::middleware(['auth:sanctum', 'ability:pegawai'])->group(function(){
 
     Route::get('customerGrup', 'App\Http\Controllers\CustomerController@indexGrup');
     Route::get('checkIn', 'App\Http\Controllers\ReservasiController@indexCheckIn');
+    Route::get('showNota', 'App\Http\Controllers\ReservasiController@indexNota');
     Route::put('updateStatus/{reservasi}', 'App\Http\Controllers\ReservasiController@updateStatus');
 
     Route::get('musim', 'App\Http\Controllers\MusimController@index');
