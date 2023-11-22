@@ -549,8 +549,8 @@ class ReservasiController extends Controller
 
     // Create NotaPelunasan
     $notaPelunasan = NotaPelunasan::create([
-        'id_pegawai' => auth()->user()->id,
-        'id_reservasi' => $reservasi->id,
+        'id_pegawai' => auth()->user()->id_pegawai,
+        'id_reservasi' => $reservasi->id_reservasi,
         'no_nota' => $noNota,
         // Add other necessary fields for NotaPelunasan
     ]);
