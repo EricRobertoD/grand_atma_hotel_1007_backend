@@ -62,7 +62,7 @@ class TransaksiFasilitasController extends Controller
         ]);
 
         // Update the deposit attribute of the related Reservasi model
-        $reservasi->deposit -= $totalHargaFasilitas;
+        $reservasi->total_deposit -= $totalHargaFasilitas;
         $reservasi->save();
 
         $reservasi->TransaksiFasilitasTambahan()->save($transaksiFasilitas);
