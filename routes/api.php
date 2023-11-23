@@ -87,6 +87,8 @@ Route::middleware(['auth:sanctum', 'ability:pegawai'])->group(function(){
     Route::get('/transaksiKamar/search', 'App\Http\Controllers\transaksiKamarController@search');
 
     Route::get('getPembatalanGrup', 'App\Http\Controllers\ReservasiController@getPembatalanGrup');
+    
+    Route::get('getNewCustomer', 'App\Http\Controllers\LaporanController@getNewCustomer');
 
     Route::post('reservasiGrup', 'App\Http\Controllers\ReservasiController@storeGrup');
 });
