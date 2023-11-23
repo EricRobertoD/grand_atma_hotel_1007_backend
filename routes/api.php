@@ -33,7 +33,7 @@ Route::post('logout', 'App\Http\Controllers\AuthController@logout');
 Route::get('kamar/{kamar}', 'App\Http\Controllers\KamarController@show');
 Route::post('reservasiAvailable', 'App\Http\Controllers\ReservasiController@kamarAvailable');
 Route::get('tandaTerimaReservasi/{tandaTerimaReservasi}', 'App\Http\Controllers\TandaTerimaController@createTandaTerima');
-Route::post('transaksiFasilitas', 'App\Http\Controllers\transaksiFasilitasController@store');
+Route::post('transaksiFasilitas', 'App\Http\Controllers\TransaksiFasilitasController@store');
 Route::get('fasilitasTambahan', 'App\Http\Controllers\FasilitasTambahanController@index');
 Route::post('updateBayar/{reservasi}', 'App\Http\Controllers\ReservasiController@updateBayar');
 Route::delete('reservasi/{reservasi}', 'App\Http\Controllers\ReservasiController@destroy');
@@ -65,7 +65,7 @@ Route::middleware(['auth:sanctum', 'ability:pegawai'])->group(function(){
     Route::delete('fasilitasTambahan/{fasilitasTambahan}', 'App\Http\Controllers\FasilitasTambahanController@destroy');
     Route::get('/fasilitasTambahan/search', 'App\Http\Controllers\FasilitasTambahanController@search');
     Route::get('/fasilitasTambahan/{fasilitasTambahan}', 'App\Http\Controllers\FasilitasTambahanController@show');
-    Route::post('transaksiFasilitasCheckIn', 'App\Http\Controllers\transaksiFasilitasController@storeCheckIn');
+    Route::post('transaksiFasilitasCheckIn', 'App\Http\Controllers\TransaksiFasilitasController@storeCheckIn');
 
     Route::get('kamar', 'App\Http\Controllers\KamarController@index');
     Route::post('kamar', 'App\Http\Controllers\KamarController@store');
