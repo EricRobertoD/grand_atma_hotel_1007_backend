@@ -65,6 +65,7 @@ Route::middleware(['auth:sanctum', 'ability:pegawai'])->group(function(){
     Route::delete('fasilitasTambahan/{fasilitasTambahan}', 'App\Http\Controllers\FasilitasTambahanController@destroy');
     Route::get('/fasilitasTambahan/search', 'App\Http\Controllers\FasilitasTambahanController@search');
     Route::get('/fasilitasTambahan/{fasilitasTambahan}', 'App\Http\Controllers\FasilitasTambahanController@show');
+    Route::post('transaksiFasilitasCheckIn', 'App\Http\Controllers\transaksiFasilitasController@storeCheckIn');
 
     Route::get('kamar', 'App\Http\Controllers\KamarController@index');
     Route::post('kamar', 'App\Http\Controllers\KamarController@store');
