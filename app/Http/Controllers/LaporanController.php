@@ -208,6 +208,44 @@ class LaporanController extends Controller
             ],
         ]);
     }
+    public function getTopCustomersWithMostBookings()
+    {
+        $result = Customer::select(
+                'customer.id_customer',
+                'customer.nama',
+                DB::raw('COUNT(reservasi.id_reservasi) as jumlah_reservasi'),
+                DB::raw('SUM(COALESCE(transaksi_kamar.harga_total, 0) + COALESCE(transaksi_fasilitas_tambahan.total_harga_fasilitas, 0)) as total_pembayaran')
+            )
+            ->leftJoin('reservasi', 'customer.id_customer', '=', 'reservasi.id_customer')
+            ->leftJoin(DB::raw('(SELECT id_reservasi, SUM(harga_total) as harga_total FROM transaksi_kamar GROUP BY id_reservasi) as transaksi_kamar'), 'reservasi.id_reservasi', '=', 'transaksi_kamar.id_reservasi')
+            ->leftJoin(DB::raw('(SELECT id_reservasi, SUM(total_harga_fasilitas) as total_harga_fasilitas FROM transaksi_fasilitas_tambahan GROUP BY id_reservasi) as transaksi_fasilitas_tambahan'), 'reservasi.id_reservasi', '=', 'transaksi_fasilitas_tambahan.id_reservasi')
+            ->groupBy('customer.id_customer', 'customer.nama') // Include 'customer.nama' in the GROUP BY clause
+            ->orderByDesc('jumlah_reservasi')
+            ->limit(5)
+            ->get();
+    
+        $resultArray = [];
+        $nowJakarta = now('Asia/Jakarta');
+    
+        foreach ($result as $item) {
+            $resultArray[] = [
+                'id_customer' => $item->id_customer,
+                'nama' => $item->nama,
+                'jumlah_reservasi' => $item->jumlah_reservasi,
+                'total_pembayaran' => number_format($item->total_pembayaran, 0, ',', '.'),
+            ];
+        }
+    
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Top 5 customers with most bookings retrieved successfully',
+            'data' => [
+                'dataLaporan' => $resultArray,
+                'tanggal_cetak' => $nowJakarta->format('F d, Y'),
+            ],
+        ]);
+    }
+    
     
 
 }
