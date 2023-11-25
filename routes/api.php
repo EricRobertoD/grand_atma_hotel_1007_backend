@@ -90,6 +90,7 @@ Route::middleware(['auth:sanctum', 'ability:pegawai'])->group(function(){
     
     Route::get('getNewCustomer', 'App\Http\Controllers\LaporanController@getNewCustomer');
     Route::get('getPendapatanPerJenisTamuPerBulan', 'App\Http\Controllers\LaporanController@getPendapatanPerJenisTamuPerBulan');
+    Route::get('getCustomerCountPerRoomType', 'App\Http\Controllers\LaporanController@getCustomerCountPerRoomType');
 
     Route::post('reservasiGrup', 'App\Http\Controllers\ReservasiController@storeGrup');
 });

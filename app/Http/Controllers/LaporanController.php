@@ -166,4 +166,48 @@ class LaporanController extends Controller
             ],
         ]);
     }
+
+    public function getCustomerCountPerRoomType()
+    {
+        $result = Reservasi::select(
+            'jenis_kamar.jenis_kamar',
+            DB::raw('SUM(CASE WHEN SUBSTRING(reservasi.id_booking, 1, 1) = "P" THEN 1 ELSE 0 END) as Personal'),
+            DB::raw('SUM(CASE WHEN SUBSTRING(reservasi.id_booking, 1, 1) = "G" THEN 1 ELSE 0 END) as `Group`'),
+            DB::raw('SUM(1) as Total')
+        )
+            ->join('transaksi_kamar', 'reservasi.id_reservasi', '=', 'transaksi_kamar.id_reservasi')
+            ->join('jenis_kamar', 'transaksi_kamar.id_jeniskamar', '=', 'jenis_kamar.id_jeniskamar')
+            ->groupBy('jenis_kamar.jenis_kamar')
+            ->get();
+    
+        $resultArray = [];
+        $totalTamu = 0;
+    
+        foreach ($result as $item) {
+            $totalTamu += $item->Total;
+    
+            $resultArray[] = [
+                'jenis_kamar' => $item->jenis_kamar,
+                'Group' => $item->Group,
+                'Personal' => $item->Personal,
+                'Total' => $item->Total,
+            ];
+        }
+    
+        $nowJakarta = now('Asia/Jakarta');
+    
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data laporan jumlah tamu per bulan berhasil didapatkan',
+            'data' => [
+                'dataLaporan' => $resultArray,
+                'tanggal_cetak' => $nowJakarta->format('F d, Y'),
+                'total_tamu' => $totalTamu,
+                'bulan' => $nowJakarta->format('F'),
+                'tahun' => $nowJakarta->year,
+            ],
+        ]);
+    }
+    
+
 }
