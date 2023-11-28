@@ -41,7 +41,7 @@ class Reservasi extends Model
     }
     public function NotaPelunasan()
     {
-        return $this->hasMany(NotaPelunasan::class, 'id_reservasi');
+        return $this->hasOne(NotaPelunasan::class, 'id_reservasi');
     }
     public function TransaksiKamar()
     {
