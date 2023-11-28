@@ -11,64 +11,84 @@ class LaporanController extends Controller
 {
     public function getNewCustomer()
     {
+        // Get the input year (tahun) from the request
+        $tahun = Request::input('tahun');
+    
+        // Validate that the 'tahun' parameter is present
+        if (!$tahun) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter \'tahun\' is required.',
+            ], 400);
+        }
+    
         $nowJakarta = now('Asia/Jakarta');
-
+    
         $newCustomersByMonth = Customer::select(
             DB::raw('MONTH(created_at) as month'),
             DB::raw('COUNT(id_customer) as jumlah_customer')
         )
+        ->whereYear('created_at', '=', $tahun) // Filter by the input year
         ->groupBy(DB::raw('MONTH(created_at)'))
         ->orderBy(DB::raw('MONTH(created_at)'))
         ->get();
-
+    
         $result = [];
-        $bulanArray = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
+        $bulanArray = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+    
         foreach ($bulanArray as $monthName) {
             $result[] = [
                 'bulan' => $monthName,
                 'jumlah_customer' => 0,
             ];
         }
-
-        foreach ($newCustomersByMonth as $item) {
-            $monthName = date("F", mktime(0, 0, 0, $item->month, 1));
-            $key = array_search($monthName, array_column($result, 'bulan'));
-            if ($key !== false) {
-                $result[$key]['jumlah_customer'] = $item->jumlah_customer;
-            }
+    
+        foreach ($newCustomersByMonth as $newCustomer) {
+            $monthIndex = $newCustomer->month - 1;
+            $result[$monthIndex]['jumlah_customer'] = $newCustomer->jumlah_customer;
         }
-
-        // Add total count
-        $totalCustomers = array_sum(array_column($result, 'jumlah_customer'));
-
+    
         return response()->json([
             'status' => 'success',
-            'message' => 'data laporan customer baru berhasil didapatkan',
+            'message' => 'New customers by month retrieved successfully for the year ' . $tahun,
             'data' => [
+                'tahun' => $tahun,
                 'dataLaporan' => $result,
-                'tanggal_cetak' => $nowJakarta->format('F d, Y'),
-                'tahun' => $nowJakarta->year,
-                'total_customer_baru' => $totalCustomers,
+                'total_customer_baru' => array_sum(array_column($result, 'jumlah_customer')),
             ],
+            'tanggal_cetak' => $nowJakarta->format('F d, Y'),
         ]);
     }
-
-    public function getPendapatanPerJenisTamuPerBulan()
+    
+public function getPendapatanPerJenisTamuPerBulan()
 {
+    // Get the input year ('tahun') from the request
+    $tahun = Request::input('tahun');
+
+    // Validate that the 'tahun' parameter is present
+    if (!$tahun) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Parameter \'tahun\' is required.',
+        ], 400);
+    }
+
     $result = Reservasi::select(
         DB::raw('MONTH(reservasi.created_at) as month'),
         DB::raw('SUM(CASE WHEN SUBSTRING(reservasi.id_booking, 1, 1) = "P" THEN COALESCE(tk.total_harga_kamar, 0) + COALESCE(tf.total_harga_fasilitas, 0) ELSE 0 END) as pendapatan_personal'),
         DB::raw('SUM(CASE WHEN SUBSTRING(reservasi.id_booking, 1, 1) = "G" THEN COALESCE(tk.total_harga_kamar, 0) + COALESCE(tf.total_harga_fasilitas, 0) ELSE 0 END) as pendapatan_grup'),
         DB::raw('SUM(COALESCE(tk.total_harga_kamar, 0) + COALESCE(tf.total_harga_fasilitas, 0)) as pendapatan_per_bulan')
     )
-        ->leftJoin(DB::raw('(SELECT id_reservasi, SUM(harga_total) as total_harga_kamar FROM transaksi_kamar GROUP BY id_reservasi) as tk'), 'reservasi.id_reservasi', '=', 'tk.id_reservasi')
-        ->leftJoin(DB::raw('(SELECT id_reservasi, SUM(total_harga_fasilitas) as total_harga_fasilitas FROM transaksi_fasilitas_tambahan GROUP BY id_reservasi) as tf'), 'reservasi.id_reservasi', '=', 'tf.id_reservasi')
-        ->groupBy('reservasi.id_reservasi', DB::raw('MONTH(reservasi.created_at)')) // Corrected alias to 'reservasi'
-        ->orderBy('reservasi.id_reservasi', 'asc') // Corrected alias to 'reservasi'
-        ->orderBy(DB::raw('MONTH(reservasi.created_at)'), 'asc')
-        ->get();
-
+    ->leftJoin(DB::raw('(SELECT id_reservasi, SUM(harga_total) as total_harga_kamar FROM transaksi_kamar GROUP BY id_reservasi) as tk'), 'reservasi.id_reservasi', '=', 'tk.id_reservasi')
+    ->leftJoin(DB::raw('(SELECT id_reservasi, SUM(total_harga_fasilitas) as total_harga_fasilitas FROM transaksi_fasilitas_tambahan GROUP BY id_reservasi) as tf'), 'reservasi.id_reservasi', '=', 'tf.id_reservasi')
+    ->whereYear('reservasi.created_at', '=', $tahun) // Filter by the input year
+    ->groupBy('reservasi.id_reservasi', DB::raw('MONTH(reservasi.created_at)')) // Corrected alias to 'reservasi'
+    ->orderBy('reservasi.id_reservasi', 'asc') // Corrected alias to 'reservasi'
+    ->orderBy(DB::raw('MONTH(reservasi.created_at)'), 'asc')
+    ->get();
 
     $resultArray = [];
     $bulanArray = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -98,75 +118,17 @@ class LaporanController extends Controller
 
     return response()->json([
         'status' => 'success',
-        'message' => 'data laporan pendapatan per jenis tamu per bulan berhasil didapatkan',
+        'message' => 'Data laporan pendapatan per jenis tamu per bulan berhasil didapatkan for the year ' . $tahun,
         'data' => [
             'dataLaporan' => $resultArray,
             'tanggal_cetak' => now('Asia/Jakarta')->format('F d, Y'),
-            'tahun' => now('Asia/Jakarta')->year,
+            'tahun' => $tahun,
             'total_pendapatan_grup' => $totalPendapatanGrup,
             'total_pendapatan_personal' => $totalPendapatanPersonal,
             'total_pendapatan' => $totalPendapatan,
         ],
     ]);
 }
-
-        
-    public function getLaporanPendapatan()
-    {
-        $nowJakarta = now('Asia/Jakarta');
-
-        $laporanPendapatanByMonth = Reservasi::select(
-            DB::raw('MONTH(created_at) as month'),
-            DB::raw('SUM(CASE WHEN reservasi.id_booking LIKE "P%" THEN transaksi_kamar.harga_total ELSE 0 END) as pendapatan_personal'),
-            DB::raw('SUM(CASE WHEN reservasi.id_booking LIKE "G%" THEN transaksi_kamar.harga_total ELSE 0 END) as pendapatan_grup'),
-            DB::raw('SUM(transaksi_fasilitas_tambahan.total_harga_fasilitas) as pendapatan_fasilitas'),
-        )
-            ->leftJoin('transaksi_kamar', 'reservasi.id_reservasi', '=', 'transaksi_kamar.id_reservasi')
-            ->leftJoin('transaksi_fasilitas_tambahan', 'reservasi.id_reservasi', '=', 'transaksi_fasilitas_tambahan.id_reservasi')
-            ->groupBy(DB::raw('MONTH(reservasi.created_at)'))
-            ->orderBy(DB::raw('MONTH(reservasi.created_at)'))
-            ->get();
-
-        $result = [];
-        $bulanArray = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-        foreach ($bulanArray as $monthName) {
-            $result[] = [
-                'bulan' => $monthName,
-                'pendapatan_grup' => 0,
-                'pendapatan_personal' => 0,
-                'pendapatan_per_bulan' => 0,
-            ];
-        }
-
-        foreach ($laporanPendapatanByMonth as $item) {
-            $monthName = date("F", mktime(0, 0, 0, $item->month, 1));
-            $key = array_search($monthName, array_column($result, 'bulan'));
-            if ($key !== false) {
-                $result[$key]['pendapatan_grup'] = $item->pendapatan_grup;
-                $result[$key]['pendapatan_personal'] = $item->pendapatan_personal;
-                $result[$key]['pendapatan_per_bulan'] = $item->pendapatan_grup + $item->pendapatan_personal + $item->pendapatan_fasilitas;
-            }
-        }
-
-        $totalPendapatanGrup = array_sum(array_column($result, 'pendapatan_grup'));
-        $totalPendapatanPersonal = array_sum(array_column($result, 'pendapatan_personal'));
-        $totalPendapatan = array_sum(array_column($result, 'pendapatan_per_bulan'));
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'data laporan pendapatan per jenis tamu per bulan berhasil didapatkan',
-            'data' => [
-                'dataLaporan' => $result,
-                'tanggal_cetak' => $nowJakarta->format('F d, Y'),
-                'tahun' => $nowJakarta->year,
-                'total_pendapatan_grup' => $totalPendapatanGrup,
-                'total_pendapatan_personal' => $totalPendapatanPersonal,
-                'total_pendapatan' => $totalPendapatan,
-            ],
-        ]);
-    }
-
     public function getCustomerCountPerRoomType()
     {
         $result = Reservasi::select(
