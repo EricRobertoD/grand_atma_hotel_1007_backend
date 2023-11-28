@@ -208,8 +208,20 @@ class LaporanController extends Controller
             ],
         ]);
     }
+
     public function getTopCustomersWithMostBookings()
     {
+        // Get the input year (tahun) from the request
+        $tahun = Request::input('tahun');
+    
+        // Validate that the 'tahun' parameter is present
+        if (!$tahun) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Parameter \'tahun\' is required.',
+            ], 400);
+        }
+    
         $result = Customer::select(
                 'customer.id_customer',
                 'customer.nama',
@@ -219,7 +231,8 @@ class LaporanController extends Controller
             ->leftJoin('reservasi', 'customer.id_customer', '=', 'reservasi.id_customer')
             ->leftJoin(DB::raw('(SELECT id_reservasi, SUM(harga_total) as harga_total FROM transaksi_kamar GROUP BY id_reservasi) as transaksi_kamar'), 'reservasi.id_reservasi', '=', 'transaksi_kamar.id_reservasi')
             ->leftJoin(DB::raw('(SELECT id_reservasi, SUM(total_harga_fasilitas) as total_harga_fasilitas FROM transaksi_fasilitas_tambahan GROUP BY id_reservasi) as transaksi_fasilitas_tambahan'), 'reservasi.id_reservasi', '=', 'transaksi_fasilitas_tambahan.id_reservasi')
-            ->groupBy('customer.id_customer', 'customer.nama') // Include 'customer.nama' in the GROUP BY clause
+            ->whereYear('reservasi.created_at', '=', $tahun) // Filter by the input year
+            ->groupBy('customer.id_customer', 'customer.nama')
             ->orderByDesc('jumlah_reservasi')
             ->limit(5)
             ->get();
@@ -238,13 +251,14 @@ class LaporanController extends Controller
     
         return response()->json([
             'status' => 'success',
-            'message' => 'Top 5 customers with most bookings retrieved successfully',
+            'message' => 'Top 5 customers with most bookings retrieved successfully for the year ' . $tahun,
             'data' => [
                 'dataLaporan' => $resultArray,
                 'tanggal_cetak' => $nowJakarta->format('F d, Y'),
             ],
         ]);
     }
+    
     
     
 
