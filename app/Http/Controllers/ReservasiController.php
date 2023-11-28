@@ -58,11 +58,11 @@ class ReservasiController extends Controller
             ->with('TransaksiFasilitasTambahan.FasilitasTambahan')
             ->with('TransaksiKamar.Kamar.JenisKamar')
             ->with('NotaPelunasan')
-            ->where('status', '=', 'Check Out')
+            ->where('status', '=', 'LunasTotal')
             ->get();
 
         return response([
-            'message' => 'Retrieve all "grup" reservasis with "Check Out" status successfully',
+            'message' => 'Retrieve all "grup" reservasis with "Lunas Total" status successfully',
             'data' => $reservasi,
         ], 200);
     }
