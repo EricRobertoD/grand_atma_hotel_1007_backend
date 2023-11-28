@@ -54,7 +54,7 @@ class ReservasiController extends Controller
 
     public function indexNota()
     {
-        $reservasi = Reservasi::with('Customer')->with('Pegawai')
+        $reservasi = Reservasi::with('Customer')->with('NotaPelunasan.Pegawai')
             ->with('TransaksiFasilitasTambahan.FasilitasTambahan')
             ->with('TransaksiKamar.Kamar.JenisKamar')
             ->with('NotaPelunasan')
